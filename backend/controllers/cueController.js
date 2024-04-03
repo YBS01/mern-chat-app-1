@@ -1,10 +1,10 @@
 const asyncHandler = require("express-async-handler");
 const Cue = require("../models/cueModel");
 const User = require("../models/userModel");
-const Chat = require("../models/chatModel");
+const Sheet = require("../models/sheetModel");
 
 //@description     Get all Cues
-//@route           GET /api/Message/:chatId
+//@route           GET /api/Cue/:chatId
 //@access          Protected
 const allCues = asyncHandler(async (req, res) => {
   try {
@@ -14,12 +14,12 @@ const allCues = asyncHandler(async (req, res) => {
     res.json(cues);
   } catch (error) {
     res.status(400);
-    throw new Error(error.message);
+    throw new Error(error.cue);
   }
 });
 
 //@description     Create New Cue
-//@route           POST /api/Message/
+//@route           POST /api/Cue/
 //@access          Protected
 const sendCue = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
@@ -45,14 +45,13 @@ const sendCue = asyncHandler(async (req, res) => {
       select: "name pic email",
     });
 
-    await Chat.findByIdAndUpdate(req.body.chatId, { latestCue: cue });
+    await Sheet.findByIdAndUpdate(req.body.chatId, { latestCue: cue });
 
     res.json(cue);
   } catch (error) {
     res.status(400);
-    throw new Error(error.message);
+    throw new Error(error.cue);
   }
 });
 
 module.exports = { allCues, sendCue };
-

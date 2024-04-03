@@ -3,9 +3,12 @@ const connectDB = require("./config/db");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
-const messageRoutes = require("./routes/messageRoutes");
+// const messageRoutes = require("./routes/messageRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const path = require("path");
+
+const cueRoutes = require("./routes/cueRoutes");
+const sheetRoutes = require("./routes/sheetRoutes");
 
 dotenv.config();
 connectDB();
@@ -20,6 +23,9 @@ app.use(express.json()); // to accept json data
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
+app.use("/api/cue", cueRoutes);
+app.use('/api/sheet', sheetRoutes);
+
 
 // --------------------------deployment------------------------------
 
