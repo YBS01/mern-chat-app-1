@@ -6,6 +6,11 @@ const messageSchema = mongoose.Schema(
     content: { type: String, trim: true },
     chat: { type: mongoose.Schema.Types.ObjectId, ref: "Chat" },
     readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    status: {
+      type: String,
+      enum: ["standby", "live", "completed", "pending"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

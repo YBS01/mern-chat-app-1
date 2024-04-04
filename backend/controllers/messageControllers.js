@@ -1,27 +1,27 @@
 const asyncHandler = require("express-async-handler");
-const Cue = require("../models/cueModel");
+const Message = require("../models/messageModel");
 const User = require("../models/userModel");
 const Chat = require("../models/chatModel");
 
-//@description     Get all Cues
+//@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
-const allCues = asyncHandler(async (req, res) => {
+const allMessages = asyncHandler(async (req, res) => {
   try {
-    const cues = await Cue.find({ chat: req.params.chatId })
+    const messages = await Message.find({ chat: req.params.chatId })
       .populate("sender", "name pic email")
       .populate("chat");
-    res.json(cues);
+    res.json(messages);
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
   }
 });
 
-//@description     Create New Cue
+//@description     Create New Message
 //@route           POST /api/Message/
 //@access          Protected
-const sendCue = asyncHandler(async (req, res) => {
+const sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
 
   if (!content || !chatId) {
@@ -29,30 +29,58 @@ const sendCue = asyncHandler(async (req, res) => {
     return res.sendStatus(400);
   }
 
-  var newCue = {
+  var newMessage = {
     sender: req.user._id,
     content: content,
     chat: chatId,
   };
 
   try {
-    var cue = await Cue.create(newCue);
+    var message = await Message.create(newMessage);
 
-    cue = await cue.populate("sender", "name pic").execPopulate();
-    cue = await cue.populate("chat").execPopulate();
-    cue = await User.populate(cue, {
+    message = await message.populate("sender", "name pic").execPopulate();
+    message = await message.populate("chat").execPopulate();
+    message = await User.populate(message, {
       path: "chat.users",
       select: "name pic email",
     });
 
-    await Chat.findByIdAndUpdate(req.body.chatId, { latestCue: cue });
+    await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
 
-    res.json(cue);
+    res.json(message);
   } catch (error) {
     res.status(400);
     throw new Error(error.message);
   }
 });
 
-module.exports = { allCues, sendCue };
+//@description     Update Message Status
+//@route           PUT /api/Message/:messageId/status/:status
+//@access          Protected
+const updateMessageStatus = asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const { messageId } = req.params;
+  let token = req.query.token; // Extract token from query parameter
 
+  try {
+    // Verify token and fetch user information if needed
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      res.status(404);
+      throw new Error("Message not found");
+    }
+
+    // Update the message status
+    message.status = status; // Update with your specific logic
+
+    // Save the updated message
+    await message.save();
+
+    res.json(message);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+module.exports = { allMessages, sendMessage, updateMessageStatus };
