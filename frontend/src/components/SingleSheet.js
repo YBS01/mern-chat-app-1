@@ -1,16 +1,17 @@
-import { Box, Text, Table, Tbody, Tr, Td, Spinner, FormControl, Input, IconButton } from "@chakra-ui/react";
+import { Box, Text, Table, Tbody, Tr, Td, Spinner, FormControl, Input, IconButton, useToast } from "@chakra-ui/react";
+import './styles.css';
+import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import io from "socket.io-client";
-import { ChatState } from "../Context/ChatProvider";
-import { getSender, getSenderFull } from "../config/ChatLogics";
-import ProfileModal from "./miscellaneous/ProfileModal";
-import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ArrowBackIcon } from "@chakra-ui/icons";
+import ProfileModal from "./miscellaneous/ProfileModal";
+import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
+import io from "socket.io-client";
+import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
+import { ChatState } from "../Context/ChatProvider";
 import CueChangeModal from "./miscellaneous/CueChangeModal";
-
 
 const ENDPOINT = "http://localhost:5000"; // Replace with your actual endpoint
 let socket;
@@ -21,11 +22,11 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [istyping, setIsTyping] = useState(false);
+  const toast = useToast();
+  
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const [selectedCue, setSelectedCue] = useState(null); // State to store selected cue
-
-  const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
-
+  
   const defaultOptions = {
     loop: true,
     autoplay: true,
@@ -34,83 +35,78 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-
-  // Function to handle cue status update
-  // const handleUpdateStatus = (status) => {
-  //   // Here you would typically make an API call to update the cue status
-  //   console.log("Updating cue status:", status);
-  //   setSelectedCue(null); // Reset selectedCue
-  // };
-
-// Assume setSelectedCue is a state setter that stores the selected message's ID
-const handleUpdateStatus = async (status) => {
-  console.log("Updating cue status:", status);
-  console.log("Updating message:", selectedCue);
-
-  if (!selectedCue) {
-    console.error("No cue selected");
-    return;
-  }
-
-  try {
-    const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${user.token}`,
-        'Content-Type': 'application/json',
-        // Include other headers as required, such as authorization headers
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update message status: ${response.status}`);
-    }
-
-    const updatedMessage = await response.json();
-    console.log('Message status updated:', updatedMessage);
-  } catch (error) {
-    console.error('Error updating message status:', error);
-  }
-
-  setSelectedCue(null); // Reset the selected message
-};
-
-
   
+  
+    const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
 
-  // Function to handle cue click and open modal
-  const handleCueClick = (message) => {
-  setSelectedCue(message._id); // Set the selected message ID
-  setShowModal(true); // Open the modal
-};
-
-  // const handleCueClick = (cue) => {
-  //   setSelectedCue(cue);
-  //   setShowModal(true);
-  // };
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
 
     try {
-      setLoading(true);
       const config = {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.get(`/api/message/${selectedChat._id}`, config);
+      
+      setLoading(true);
+
+      const { data } = await axios.get(
+        `/api/message/${selectedChat._id}`,
+         config
+         );
       setMessages(data);
       setLoading(false);
 
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       console.error("Error fetching messages:", error);
+      toast({
+        title: "Error Occured!",
+        description: "Failed to Load the Messages",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    
     }
   };
 
   const sendMessage = async (event) => {
-    // Your sendMessage logic
+    
+    if (newMessage) {
+      socket.emit("stop typing", selectedChat._id);
+      try {
+        const config = {
+          headers: {
+            "Content-type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        setNewMessage("");
+        const { data } = await axios.post(
+          "/api/message",
+          {
+            content: newMessage,
+            chatId: selectedChat,
+          },
+          config
+        );
+        socket.emit("new message", data);
+        setMessages([...messages, data]);
+      } catch (error) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to send the Message",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+      }
+    }
   };
 
   useEffect(() => {
@@ -131,12 +127,71 @@ const handleUpdateStatus = async (status) => {
 
   useEffect(() => {
     socket.on("message received", (newMessageReceived) => {
-      // Your message received logic
+      setMessages([...messages, newMessageReceived]);
     });
   });
 
   const typingHandler = (e) => {
-    // Your typing handler logic
+    
+    setNewMessage(e.target.value);
+
+    if (!socketConnected) return;
+
+    if (!istyping) {
+      setIsTyping(true);
+      socket.emit("typing", selectedChat._id);
+    }
+    let lastTypingTime = new Date().getTime();
+    var timerLength = 3000;
+    setTimeout(() => {
+      var timeNow = new Date().getTime();
+      var timeDiff = timeNow - lastTypingTime;
+      if (timeDiff >= timerLength && istyping) {
+        socket.emit("stop typing", selectedChat._id);
+        setIsTyping(false);
+      }
+    }, timerLength);
+  };
+
+  
+  const handleCueClick = (message) => {
+    setSelectedCue(message._id); // Set the selected message ID
+    setShowModal(true); // Open the modal
+  };
+
+
+  const handleUpdateStatus = async (status) => {
+    console.log("Updating cue status:", status);
+    console.log("Updating message:", selectedCue);
+
+    if (!selectedCue) {
+      console.error("No cue selected");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update message status: ${response.status}`);
+      }
+
+      const updatedMessage = await response.json();
+
+      
+      
+      console.log('Message status updated:', updatedMessage);
+    } catch (error) {
+      console.error('Error updating message status:', error);
+    }
+
+    setSelectedCue(null); // Reset the selected message
   };
 
   return (
@@ -177,7 +232,11 @@ const handleUpdateStatus = async (status) => {
                 </Table>
               </Box>
             )}
-            <FormControl onKeyDown={sendMessage} id="first-name" isRequired mt={3}>
+            <FormControl onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    sendMessage();
+                  }
+                }} id="first-name" isRequired mt={3}>
               {istyping ? (
                 <div>
                   <Lottie options={defaultOptions} width={70} style={{ marginBottom: 15, marginLeft: 0 }} />
@@ -201,5 +260,6 @@ const handleUpdateStatus = async (status) => {
     </>
   );
 };
+
 
 export default SingleSheet;
