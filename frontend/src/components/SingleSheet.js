@@ -36,17 +36,58 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   };
 
   // Function to handle cue status update
-  const handleUpdateStatus = (status) => {
-    // Here you would typically make an API call to update the cue status
-    console.log("Updating cue status:", status);
-    setSelectedCue(null); // Reset selectedCue
-  };
+  // const handleUpdateStatus = (status) => {
+  //   // Here you would typically make an API call to update the cue status
+  //   console.log("Updating cue status:", status);
+  //   setSelectedCue(null); // Reset selectedCue
+  // };
+
+// Assume setSelectedCue is a state setter that stores the selected message's ID
+const handleUpdateStatus = async (status) => {
+  console.log("Updating cue status:", status);
+  console.log("Updating message:", selectedCue);
+
+  if (!selectedCue) {
+    console.error("No cue selected");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+        // Include other headers as required, such as authorization headers
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update message status: ${response.status}`);
+    }
+
+    const updatedMessage = await response.json();
+    console.log('Message status updated:', updatedMessage);
+  } catch (error) {
+    console.error('Error updating message status:', error);
+  }
+
+  setSelectedCue(null); // Reset the selected message
+};
+
+
+  
 
   // Function to handle cue click and open modal
-  const handleCueClick = (cue) => {
-    setSelectedCue(cue);
-    setShowModal(true);
-  };
+  const handleCueClick = (message) => {
+  setSelectedCue(message._id); // Set the selected message ID
+  setShowModal(true); // Open the modal
+};
+
+  // const handleCueClick = (cue) => {
+  //   setSelectedCue(cue);
+  //   setShowModal(true);
+  // };
 
   const fetchMessages = async () => {
     if (!selectedChat) return;

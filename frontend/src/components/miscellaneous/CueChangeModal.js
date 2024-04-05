@@ -1,62 +1,100 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, useDisclosure, FormControl, Input, useToast, Box, IconButton, Spinner } from "@chakra-ui/react";
-import axios from "axios";
-import { useState } from "react";
+import React from 'react';
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Button,
+  ButtonGroup,
+} from '@chakra-ui/react';
 
-const CueChangeModal = ({ isOpen, onClose, cueId, setFetchAgain }) => {
-  const [status, setStatus] = useState(""); // State to hold the selected status
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
-
-  const handleChangeStatus = async () => {
-    try {
-      setLoading(true);
-      const config = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Assuming you store token in localStorage
-        },
-      };
-      const { data } = await axios.put(`/api/message/${cueId}/status`, { status }, config); // Updated API endpoint
-      toast({
-        title: "Cue Status Updated",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      onClose(); // Close the modal after successful update
-      setFetchAgain(true); // Trigger a fetch update
-    } catch (error) {
-      toast({
-        title: "Error Updating Status",
-        description: "An error occurred while updating the cue status.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
+const CueChangeModal = ({ isOpen, onClose, onUpdateStatus }) => {
+  const handleStatusUpdate = (status) => {
+    onUpdateStatus(status);
+    onClose();
   };
 
+// const handleStatusUpdate = async () => {
+//     try {
+//         const confi = {
+//           headers: {
+//             Authorization: `Bearer ${user.token}`,
+//           },
+//         };
+//         const {data} = await axios.put(
+//             'api/message/:messageId/status/:status',
+//             {
+//                 messageId: selectedCue._id,
+//                 status: status,
+//             },
+//             config            
+//         )
+        
+//     } catch (error) {
+//         toast({
+//             title: "Error Occured!",
+//             description: "Failed to set status",
+//             status: "error",
+//             duration: 5000,
+//             isClosable: true,
+//             position: "bottom-left",
+//           });
+//     }
+//     }   
+
+
+// const onUpdateStatus = async (status) => {
+//   const messageId = 'your-message-id'; // Replace with actual message ID
+//   const token = 'your-auth-token'; // Replace with actual auth token
+
+//   try {
+//     const response = await fetch(`/api/messages/${messageId}/status/${status}?token=${token}`, {
+//       method: 'PUT',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         // Include other headers as required, such as authorization headers
+//       },
+//     });
+
+//     if (!response.ok) {
+//       throw new Error('Failed to update message status');
+//     }
+
+//     const updatedMessage = await response.json();
+//     console.log('Message status updated:', updatedMessage);
+//   } catch (error) {
+//     console.error('Error updating message status:', error);
+//   }
+// };
+
+
   return (
-    <Modal onClose={onClose} isOpen={isOpen} isCentered>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Select Cue Status</ModalHeader>
+        <ModalHeader>Cue Status</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <FormControl>
-            <Input
-              placeholder="Enter cue status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            />
-          </FormControl>
+          <ButtonGroup variant="outline" spacing="4">
+            <Button colorScheme="red" onClick={() => handleStatusUpdate('live')}>
+              Live
+            </Button>
+            <Button colorScheme="orange" onClick={() => handleStatusUpdate('standby')}>
+              Standby
+            </Button>
+            <Button colorScheme="green" onClick={() => handleStatusUpdate('completed')}>
+              Completed
+            </Button>
+            <Button colorScheme="blue" onClick={() => handleStatusUpdate('Pending')}>
+              Pending
+            </Button>
+          </ButtonGroup>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={() => handleChangeStatus()} colorScheme="blue" isLoading={loading}>
-            Update Status
-          </Button>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>Cancel</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
