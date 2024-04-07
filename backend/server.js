@@ -71,6 +71,12 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
 
+  socket.on("cue status update", ({ messageId, status }) => {
+    console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
+    // Emit the event to other users in the chat room
+    socket.broadcast.emit("cue status update", { messageId, status });
+  });
+
   socket.on("join chat", (room) => {
     socket.join(room);
     console.log("User Joined Room: " + room);
@@ -89,6 +95,9 @@ io.on("connection", (socket) => {
       socket.in(user._id).emit("message recieved", newMessageRecieved);
     });
   });
+
+
+  
 
   socket.off("setup", () => {
     console.log("USER DISCONNECTED");

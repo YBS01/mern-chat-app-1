@@ -11,18 +11,19 @@ import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
+
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-
-const ENDPOINT = "http://localhost:5000"; // Replace with your actual endpoint
-let socket;
+const ENDPOINT = "http://localhost:5000"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
+var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const toast = useToast();
 
@@ -69,8 +70,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-  const sendMessage = async () => {
-    if (newMessage) {
+  const sendMessage = async (event) => {
+    if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
       try {
         const config = {
@@ -110,20 +111,29 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
-    return () => {
-      socket.disconnect(); // Clean up socket connection on component unmount
-    };
-  }, [user]);
+    // eslint-disable-next-line
+  }, []);
 
   useEffect(() => {
     fetchMessages();
 
+    selectedChatCompare = selectedChat;
     // eslint-disable-next-line
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.on("message received", (newMessageReceived) => {
-      setMessages([...messages, newMessageReceived]);
+    socket.on("message recieved", (newMessageRecieved) => {
+      if (
+        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        if (!notification.includes(newMessageRecieved)) {
+          setNotification([newMessageRecieved, ...notification]);
+          setFetchAgain(!fetchAgain);
+        }
+      } else {
+        setMessages([...messages, newMessageRecieved]);
+      }
     });
   });
 
@@ -132,8 +142,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
     if (!socketConnected) return;
 
-    if (!istyping) {
-      setIsTyping(true);
+    if (!typing) {
+      setTyping(true);
       socket.emit("typing", selectedChat._id);
     }
     let lastTypingTime = new Date().getTime();
@@ -141,9 +151,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     setTimeout(() => {
       var timeNow = new Date().getTime();
       var timeDiff = timeNow - lastTypingTime;
-      if (timeDiff >= timerLength && istyping) {
+      if (timeDiff >= timerLength && typing) {
         socket.emit("stop typing", selectedChat._id);
-        setIsTyping(false);
+        setTyping(false);
       }
     }, timerLength);
   };
@@ -211,7 +221,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               </div>
             )}
 
-            <FormControl id="messageInput" isRequired mt={3}>
+            <FormControl
+              onKeyDown={sendMessage}
+              id="first-name"
+              isRequired
+              mt={3}
+            >
               {istyping ? (
                 <div>
                   <Lottie
@@ -230,11 +245,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 placeholder="Enter a message.."
                 value={newMessage}
                 onChange={typingHandler}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    sendMessage();
-                  }
-                }}
               />
             </FormControl>
           </Box>

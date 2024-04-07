@@ -8,19 +8,22 @@ import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
+
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
+
 import CueChangeModal from "./miscellaneous/CueChangeModal";
 
-const ENDPOINT = "http://localhost:5000"; // Replace with your actual endpoint
-let socket;
+const ENDPOINT = "http://localhost:5000";
+var socket, selectedChatCompare;
 
 const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const toast = useToast();
   
@@ -75,8 +78,7 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async (event) => {
-    
-    if (newMessage) {
+    if (event.key === "Enter" && newMessage) {
       socket.emit("stop typing", selectedChat._id);
       try {
         const config = {
@@ -116,83 +118,142 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
-    return () => {
-      socket.disconnect(); // Clean up socket connection on component unmount
-    };
-  }, [user]);
+    // return () => {
+    //   socket.disconnect(); // Clean up socket connection on component unmount
+    // };
+  }, [/*user*/]);
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   fetchMessages();
+  // }, [selectedChat, fetchAgain]);
+
+    useEffect(() => {
     fetchMessages();
-  }, [selectedChat, fetchAgain]);
 
-  useEffect(() => {
-    socket.on("message received", (newMessageReceived) => {
-      setMessages([...messages, newMessageReceived]);
-    });
-  });
+    selectedChatCompare = selectedChat;
+    // eslint-disable-next-line
+  }, [selectedChat]);
 
-  const typingHandler = (e) => {
-    
-    setNewMessage(e.target.value);
 
-    if (!socketConnected) return;
+  // useEffect(() => {
+  //   socket.on("message received", (newMessageReceived) => {
+  //     setMessages([...messages, newMessageReceived]);
+  //   });
+  // });
 
-    if (!istyping) {
-      setIsTyping(true);
-      socket.emit("typing", selectedChat._id);
-    }
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
-    setTimeout(() => {
-      var timeNow = new Date().getTime();
-      var timeDiff = timeNow - lastTypingTime;
-      if (timeDiff >= timerLength && istyping) {
-        socket.emit("stop typing", selectedChat._id);
-        setIsTyping(false);
+    useEffect(() => {
+    socket.on("message recieved", (newMessageRecieved) => {
+      if (
+        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        selectedChatCompare._id !== newMessageRecieved.chat._id
+      ) {
+        if (!notification.includes(newMessageRecieved)) {
+          setNotification([newMessageRecieved, ...notification]);
+          setFetchAgain(!fetchAgain);
+        }
+      } else {
+        setMessages([...messages, newMessageRecieved]);
       }
-    }, timerLength);
-  };
+    });
+  }, [messages]);
+  
+  
+    const typingHandler = (e) => {
+      
+      setNewMessage(e.target.value);
+  
+      if (!socketConnected) return;
+  
+      if (!istyping) {
+        setIsTyping(true);
+        socket.emit("typing", selectedChat._id);
+      }
+      let lastTypingTime = new Date().getTime();
+      var timerLength = 3000;
+      setTimeout(() => {
+        var timeNow = new Date().getTime();
+        var timeDiff = timeNow - lastTypingTime;
+        if (timeDiff >= timerLength && istyping) {
+          socket.emit("stop typing", selectedChat._id);
+          setIsTyping(false);
+        }
+      }, timerLength);
+    };
+  
+    
 
   
-  const handleCueClick = (message) => {
+ // Inside useEffect hook to handle the socket event
+useEffect(() => {
+  socket.on("cue status update", ({ messageId, status }) => {
+    // Find the message by ID and update its status
+    setMessages(messages.map(message => {
+      if (message._id === messageId) {
+        return { ...message, status };
+      }
+      return message;
+    }));
+  });
+}, [messages]); // Make sure to include 'messages' in the dependency array
+
+
+const handleCueClick = (message) => {
     setSelectedCue(message._id); // Set the selected message ID
     setShowModal(true); // Open the modal
   };
 
 
-  const handleUpdateStatus = async (status) => {
-    console.log("Updating cue status:", status);
-    console.log("Updating message:", selectedCue);
+const handleUpdateStatus = async (status) => {
+  console.log("Updating cue status:", status);
+  console.log("Updating message:", selectedCue);
 
-    if (!selectedCue) {
-      console.error("No cue selected");
-      return;
+  if (!selectedCue) {
+    console.error("No cue selected");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update message status: ${response.status}`);
     }
 
-    try {
-      const response = await fetch(`/api/message/${selectedCue}/status/${status}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+    const updatedMessage = await response.json();
+    console.log('Message status updated:', updatedMessage);
+    
 
-      if (!response.ok) {
-        throw new Error(`Failed to update message status: ${response.status}`);
+    // Emit a socket event to notify other clients about the status change
+    socket.emit("cue status update", { messageId: selectedCue, status })
+    // Emit cue status update event to the server
+// console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
+console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `Status` , {status});
+
+    
+    
+
+    // Optionally, you can also update the local state immediately for better user experience
+    const updatedMessages = messages.map(message => {
+      if (message._id === selectedCue) {
+        return { ...message, status };
       }
+      return message;
+    });
+    setMessages(updatedMessages);
+  } catch (error) {
+    console.error('Error updating message status:', error);
+  }
 
-      const updatedMessage = await response.json();
+  setSelectedCue(null); // Reset the selected message
+};
 
-      
-      
-      console.log('Message status updated:', updatedMessage);
-    } catch (error) {
-      console.error('Error updating message status:', error);
-    }
 
-    setSelectedCue(null); // Reset the selected message
-  };
 
   return (
     <>
@@ -225,6 +286,10 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                       <Tr key={index} onClick={() => handleCueClick(message)} style={{ cursor: "pointer", background: message.status === "live" ? "red" : (message.status === "standby" ? "orange" : "white") }}>
                         <Td>{message.content}</Td>
                         <Td>{message.sender.name}</Td>
+                        <Td></Td>
+                        <Td></Td>
+                        <Td></Td>
+                        
                         {/* Add other message attributes as needed */}
                       </Tr>
                     ))}
@@ -232,14 +297,20 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
                 </Table>
               </Box>
             )}
-            <FormControl onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    sendMessage();
-                  }
-                }} id="first-name" isRequired mt={3}>
+            <FormControl
+              onKeyDown={sendMessage}
+              id="first-name"
+              isRequired
+              mt={3}
+            >
               {istyping ? (
                 <div>
-                  <Lottie options={defaultOptions} width={70} style={{ marginBottom: 15, marginLeft: 0 }} />
+                  <Lottie
+                    options={defaultOptions}
+                    // height={50}
+                    width={70}
+                    style={{ marginBottom: 15, marginLeft: 0 }}
+                  />
                 </div>
               ) : (
                 <></>
