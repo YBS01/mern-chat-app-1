@@ -226,7 +226,7 @@ const handleUpdateStatus = async (status) => {
     }
 
     const updatedMessage = await response.json();
-    console.log('Message status updated:', updatedMessage);
+    console.log('Message status updated:', updatedMessage); 
     
 
     // Emit a socket event to notify other clients about the status change
