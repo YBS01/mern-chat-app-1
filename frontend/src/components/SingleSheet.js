@@ -283,7 +283,7 @@ console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `
                   <Tbody>
                     {/* Render cues as rows */}
                     {messages.map((message, index) => (
-                      <Tr key={index} onClick={() => handleCueClick(message)} style={{ cursor: "pointer", background: message.status === "live" ? "red" : (message.status === "standby" ? "orange" : "white") }}>
+                      <Tr key={index} onClick={() => handleCueClick(message)} style={{ cursor: "pointer", background: message.status === "live" ? "red" : (message.status === "standby" ? "orange" : (message.status === "completed" ? "gray" : "white") ) }}>
                         <Td>{message.content}</Td>
                         <Td>{message.sender.name}</Td>
                         <Td></Td>

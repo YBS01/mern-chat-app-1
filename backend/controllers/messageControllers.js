@@ -3,6 +3,8 @@ const Message = require("../models/messageModel");
 const User = require("../models/userModel");
 const Chat = require("../models/chatModel");
 
+
+
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
@@ -57,14 +59,11 @@ const sendMessage = asyncHandler(async (req, res) => {
 //@description     Update Message Status
 //@route           PUT /api/Message/:messageId/status/:status
 //@access          Protected
-const updateMessageStatus = asyncHandler(async (req, res) => {
+const updateMessageStatus = asyncHandler(async (req, res, io) => {
   const { status } = req.params;
   const { messageId } = req.params;
-  let token = req.query.token; // Extract token from query parameter
 
   try {
-    // Verify token and fetch user information if needed
-
     const message = await Message.findById(messageId);
     if (!message) {
       res.status(404);
@@ -77,10 +76,14 @@ const updateMessageStatus = asyncHandler(async (req, res) => {
     // Save the updated message
     await message.save();
 
+    // Emit the socket event to notify other clients about the status change
+    // io.emit("cue status update", { messageId, status });
+
     res.json(message);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 module.exports = { allMessages, sendMessage, updateMessageStatus };

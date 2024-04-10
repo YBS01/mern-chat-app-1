@@ -88,7 +88,7 @@ const CueChangeModal = ({ isOpen, onClose, onUpdateStatus }) => {
             <Button colorScheme="green" onClick={() => handleStatusUpdate('completed')}>
               Completed
             </Button>
-            <Button colorScheme="blue" onClick={() => handleStatusUpdate('Pending')}>
+            <Button colorScheme="blue" onClick={() => handleStatusUpdate('pending')}>
               Pending
             </Button>
           </ButtonGroup>
