@@ -284,7 +284,7 @@ const handleUpdateStatus = async (status) => {
                 <ProfileModal user={getSenderFull(user, selectedChat.users)} />
               </>
             ) : (
-              <>
+              <>Runsheet:  
                 {selectedChat.chatName.toUpperCase()}
                 <UpdateGroupChatModal fetchMessages={fetchMessages} fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
               </>
@@ -387,7 +387,7 @@ const handleUpdateStatus = async (status) => {
       ) : (
         <Box d="flex" alignItems="center" justifyContent="center" h="100%">
           <Text fontSize="3xl" pb={3} fontFamily="Work sans">
-            Click on a user to start chatting
+            Click on a sheet to
           </Text>
         </Box>
       )}

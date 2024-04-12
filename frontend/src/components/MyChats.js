@@ -51,7 +51,7 @@ const MyChats = ({ fetchAgain }) => {
       flexDir="column"
       alignItems="center"
       p={3}
-      bg="white"
+      bg="gray.800" // Adjusted background color for dark mode
       w={{ base: "100%", md: "31%" }}
       borderRadius="lg"
       borderWidth="1px"
@@ -65,15 +65,18 @@ const MyChats = ({ fetchAgain }) => {
         w="100%"
         justifyContent="space-between"
         alignItems="center"
+        color="white"
+        bg="gray.800" // Adjusted background color for dark mode
       >
-        My Chats
+        My Sheets
         <GroupChatModal>
           <Button
             d="flex"
             fontSize={{ base: "17px", md: "10px", lg: "17px" }}
             rightIcon={<AddIcon />}
+            bg="gray.600" // Adjusted background color for dark mode
           >
-            New Group Chat
+            New Runsheet
           </Button>
         </GroupChatModal>
       </Box>
@@ -81,14 +84,16 @@ const MyChats = ({ fetchAgain }) => {
         d="flex"
         flexDir="column"
         p={3}
-        bg="#F8F8F8"
+        bg="gray.800" // Adjusted background color for dark mode
         w="100%"
         h="100%"
         borderRadius="lg"
         overflowY="hidden"
       >
         {chats ? (
-          <Stack overflowY="scroll">
+          <Stack overflowY="scroll"
+            bg="gray.800" // Adjusted background color for dark mode
+          >
             {chats.map((chat) => (
               <Box
                 onClick={() => setSelectedChat(chat)}

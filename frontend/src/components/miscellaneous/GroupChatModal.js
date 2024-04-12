@@ -107,7 +107,7 @@ const GroupChatModal = ({ children }) => {
       setChats([data, ...chats]);
       onClose();
       toast({
-        title: "New Group Chat Created!",
+        title: "New Run Sheet Created!",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -138,13 +138,13 @@ const GroupChatModal = ({ children }) => {
             d="flex"
             justifyContent="center"
           >
-            Create Group Chat
+            Create Runsheet
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody d="flex" flexDir="column" alignItems="center">
             <FormControl>
               <Input
-                placeholder="Chat Name"
+                placeholder="Sheet Name"
                 mb={3}
                 onChange={(e) => setGroupChatName(e.target.value)}
               />
@@ -182,7 +182,7 @@ const GroupChatModal = ({ children }) => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={handleSubmit} colorScheme="blue">
-              Create Chat
+              Create Runsheet
             </Button>
           </ModalFooter>
         </ModalContent>

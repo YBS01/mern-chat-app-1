@@ -91,7 +91,11 @@ const Login = () => {
             placeholder="Enter password"
           />
           <InputRightElement width="4.5rem">
-            <Button h="1.75rem" size="sm" onClick={handleClick}>
+            <Button h="1.75rem"
+              size="sm"
+              _hover={{ bg: "gray.500" }}
+              onClick={handleClick}
+              bg="gray.300">
               {show ? "Hide" : "Show"}
             </Button>
           </InputRightElement>

@@ -28,21 +28,25 @@ function Homepage() {
         d="flex"
         justifyContent="center"
         p={3}
-        bg="white"
+        bg="gray.800" // Adjusted background color for dark mode
         w="100%"
         m="40px 0 15px 0"
         borderRadius="lg"
         borderWidth="1px"
       >
-        <Text fontSize="4xl" fontFamily="Work sans">
-          Talk-A-Tive
+        <Text fontSize="4xl" fontFamily="Work sans" color="white"> {/* Adjusted text color for dark mode */}
+          Digital Runsheet
         </Text>
       </Box>
-      <Box bg="white" w="100%" p={4} borderRadius="lg" borderWidth="1px">
+      <Box bg="gray.800" w="100%" p={4} borderRadius="lg" borderWidth="1px"> {/* Adjusted background color for dark mode */}
         <Tabs isFitted variant="soft-rounded">
           <TabList mb="1em">
-            <Tab>Login</Tab>
-            <Tab>Sign Up</Tab>
+            <Tab _selected={{ color: "white", bg: "blue.500" }}> {/* Adjusted tab color for dark mode */}
+              Login
+            </Tab>
+            <Tab _selected={{ color: "white", bg: "blue.500" }}> {/* Adjusted tab color for dark mode */}
+              Sign Up
+            </Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

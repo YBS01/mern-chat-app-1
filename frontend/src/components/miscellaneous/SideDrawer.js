@@ -128,21 +128,21 @@ function SideDrawer() {
         d="flex"
         justifyContent="space-between"
         alignItems="center"
-        bg="white"
+        bg="gray.800" // Adjusted background color for dark mode
         w="100%"
         p="5px 10px 5px 10px"
         borderWidth="5px"
       >
-        <Tooltip label="Search Users to chat" hasArrow placement="bottom-end">
+        <Tooltip label="Search Users add to crew" hasArrow placement="bottom-end">
           <Button variant="ghost" onClick={onOpen}>
-            <i className="fas fa-search"></i>
+            {/* <i className="fas fa-search"></i> */}
             <Text d={{ base: "none", md: "flex" }} px={4}>
-              Search User
+              {/* Search User */}
             </Text>
           </Button>
         </Tooltip>
-        <Text fontSize="2xl" fontFamily="Work sans">
-          Talk-A-Tive
+        <Text color="white" fontSize="2xl" fontFamily="Work sans">
+          Digital Runsheet
         </Text>
         <div>
           <Menu>
@@ -151,7 +151,7 @@ function SideDrawer() {
                 count={notification.length}
                 effect={Effect.SCALE}
               />
-              <BellIcon fontSize="2xl" m={1} />
+              <BellIcon fontSize="2xl" m={1} color="white"/>
             </MenuButton>
             <MenuList pl={2}>
               {!notification.length && "No New Messages"}
