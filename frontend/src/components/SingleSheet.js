@@ -363,22 +363,22 @@ const handleUpdateStatus = async (status) => {
                 <></>
               )}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter a message.." value={newMessage} onChange={typingHandler} />
-              // Input for updating itemNum
+              {/* // Input for updating itemNum */}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter itemNum.." value={newItemNum} onChange={(e) => setNewItemNum(e.target.value)} />
 
-              // Input for updating estTime
+              {/* // Input for updating estTime */}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter estTime.." value={newEstTime} onChange={(e) => setNewEstTime(e.target.value)} />
 
               {/* // Input for updating content
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter content.." value={newContent} onChange={(e) => setNewContent(e.target.value)} /> */}
 
-              // Input for updating category
+              {/* // Input for updating category */}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter category.." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
 
-              // Input for updating location
+              {/* // Input for updating location */}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter location.." value={newLocation} onChange={(e) => setNewLocation(e.target.value)} />
 
-              // Input for updating notes
+              {/* // Input for updating notes */}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter notes.." value={newNotes} onChange={(e) => setNewNotes(e.target.value)} />
 
             </FormControl>
