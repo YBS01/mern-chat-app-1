@@ -1,4 +1,4 @@
-import { Box, Text, Table, Tbody, Tr, Td, Spinner, FormControl, Input, IconButton, useToast } from "@chakra-ui/react";
+import { Box, Text, Table, Tbody, Tr, Td, Th, Thead, TableContainer, Spinner, FormControl, Input, IconButton, useToast } from "@chakra-ui/react";
 import './styles.css';
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useState } from "react";
@@ -22,6 +22,15 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+
+  const [newItemNum, setNewItemNum] = useState("");
+  const [newCategory, setNewCategory] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+  const [newEstTime, setNewEstTime] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+
+
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
@@ -91,7 +100,12 @@ const SingleSheet = ({ fetchAgain, setFetchAgain }) => {
         const { data } = await axios.post(
           "/api/message",
           {
+            itemNum: newItemNum,
+            estTime: newEstTime,
             content: newMessage,
+            category: newCategory,
+            location: newLocation,
+            notes: newNotes,
             chatId: selectedChat,
           },
           config
@@ -232,26 +246,28 @@ const handleUpdateStatus = async (status) => {
     // Emit a socket event to notify other clients about the status change
     socket.emit("cue status update", { messageId: selectedCue, status })
     // Emit cue status update event to the server
-// console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
-console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `Status` , {status});
+    // console.log(`Cue status update emitted: Message ID ${messageId}, Status ${status}`);
+    console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `Status` , {status});
 
     
     
 
-    // Optionally, you can also update the local state immediately for better user experience
-    const updatedMessages = messages.map(message => {
-      if (message._id === selectedCue) {
-        return { ...message, status };
-      }
-      return message;
-    });
-    setMessages(updatedMessages);
-  } catch (error) {
-    console.error('Error updating message status:', error);
-  }
+      // Optionally, you can also update the local state immediately for better user experience
+      const updatedMessages = messages.map(message => {
+        if (message._id === selectedCue) {
+          return { ...message, status };
+        }
+        return message;
+      });
+      setMessages(updatedMessages);
+    } catch (error) {
+      console.error('Error updating message status:', error);
+    }
 
-  setSelectedCue(null); // Reset the selected message
+    setSelectedCue(null); // Reset the selected message ID
 };
+
+
 
 
 
@@ -275,24 +291,55 @@ console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `
             ))}
           </Text>
           <Box d="flex" flexDir="column" justifyContent="flex-end" p={3} bg="#E8E8E8" w="100%" h="100%" borderRadius="lg" overflowY="hidden">
+            <Table>
+              
+                  <Thead>
+      <Tr>
+        <Th>#</Th>
+        <Th>Duration</Th>
+        <Th>Action</Th>
+        <Th>Category</Th>
+        <Th>Notes</Th>
+      </Tr>
+    </Thead>
+            </Table>
             {loading ? (
               <Spinner size="xl" w={20} h={20} alignSelf="center" margin="auto" />
             ) : (
+              
               <Box overflowY="auto" flexGrow={1}>
                 <Table variant="simple">
+                  <Thead>
+      <Tr>
+        <Th>#</Th>
+        <Th>Duration</Th>
+        <Th>Action</Th>
+        <Th>Category</Th>
+        <Th>Notes</Th>
+      </Tr>
+    </Thead>
                   <Tbody>
+                    
                     {/* Render cues as rows */}
                     {messages.map((message, index) => (
                       <Tr key={index} onClick={() => handleCueClick(message)} style={{ cursor: "pointer", background: message.status === "live" ? "red" : (message.status === "standby" ? "orange" : (message.status === "completed" ? "gray" : "white") ) }}>
+                        {/* <Td>{message.sender.name}</Td> */}
+                        <Td>{message.itemNum}</Td>
+                        <Td>{message.estTime}</Td>
                         <Td>{message.content}</Td>
-                        <Td>{message.sender.name}</Td>
-                        <Td></Td>
-                        <Td></Td>
-                        <Td></Td>
+                        <Td>{message.category}</Td>
+                        <Td>{message.notes}</Td>        
+                        
                         
                         {/* Add other message attributes as needed */}
                       </Tr>
+
+                      
+                      
                     ))}
+                    <Tr>
+                      
+                    </Tr>
                   </Tbody>
                 </Table>
               </Box>
@@ -316,6 +363,24 @@ console.log(`cue status update emitted: Message ID`, {messageId: selectedCue}, `
                 <></>
               )}
               <Input variant="filled" bg="#E0E0E0" placeholder="Enter a message.." value={newMessage} onChange={typingHandler} />
+              // Input for updating itemNum
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter itemNum.." value={newItemNum} onChange={(e) => setNewItemNum(e.target.value)} />
+
+              // Input for updating estTime
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter estTime.." value={newEstTime} onChange={(e) => setNewEstTime(e.target.value)} />
+
+              {/* // Input for updating content
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter content.." value={newContent} onChange={(e) => setNewContent(e.target.value)} /> */}
+
+              // Input for updating category
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter category.." value={newCategory} onChange={(e) => setNewCategory(e.target.value)} />
+
+              // Input for updating location
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter location.." value={newLocation} onChange={(e) => setNewLocation(e.target.value)} />
+
+              // Input for updating notes
+              <Input variant="filled" bg="#E0E0E0" placeholder="Enter notes.." value={newNotes} onChange={(e) => setNewNotes(e.target.value)} />
+
             </FormControl>
           </Box>
         </>
