@@ -16,7 +16,7 @@
     "./dist/favicon.ico"
   ]
 },
-"bin": "./backend/server.js"
+"bin": "./backend/fontendServe.js"
 ,
   "keywords": [
     "mern",
