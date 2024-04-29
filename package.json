@@ -4,9 +4,20 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon backend/server.js",
-    "build": "npm install --legacy-peer-deps && npm install --legacy-peer-deps --prefix frontend && npm run build --prefix frontend"
-  },
+  "start": "concurrently \"npm run server\" \"npm run client\"",
+  "server": "nodemon backend/server.js",
+  "client": "npm start --prefix frontend",
+  "build": "npm install --legacy-peer-deps && npm install --legacy-peer-deps --prefix frontend && npm run build --prefix frontend"
+},
+"pkg": {
+  "scripts": "./dist/bundle.js",
+  "assets": [
+    "./dist/index.html",
+    "./dist/favicon.ico"
+  ]
+},
+"bin": "./backend/server.js"
+,
   "keywords": [
     "mern",
     "chat-app"
@@ -23,5 +34,8 @@
     "mongoose": "^5.12.9",
     "nodemon": "^2.0.7",
     "socket.io": "^4.1.2"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
